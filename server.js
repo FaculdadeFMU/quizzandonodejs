@@ -125,16 +125,13 @@ app.get
   app.get
 (
     '/getPergunta',
-    function ({ query: { id_grupoPergunta } }, res) {
-      var _dbConnection = dbConnection();
-      var _callback = function (error, result) {
-        return {
-          _dbConnection,
-          res,
-          id_grupoPergunta,
-        };
+    function( req, res ) {
+        var _dbConnection = dbConnection();
+        var _callback = function (error, result) {
+            _dbConnection.destroy();
+            res.status(200).send(result);
+        }
 
-      }
         var retornoPerguntasSQL = new PerguntasSQL(_dbConnection, _callback);
         retornoPerguntasSQL.getPergunta()
     }
@@ -264,97 +261,6 @@ app.get
   )
 
 
-  app.get
-  (
-      '/getEstacao',
-      function ({ query: { id_users } }, res) {
-        var _dbConnection = dbConnection();
-        var _callback = function (error, result) {
-          return {
-            _dbConnection,
-            res,
-            id_users,
-          };
-
-        }
-          var retornoEstacaoSQL = new EstacaoSQL(_dbConnection, _callback);
-          retornoEstacaoSQL.getEstacao()
-      }
-  )
-  app.get
-  (
-      '/getAdmGrupo',
-      function ({ query: { id_users } }, res) {
-        var _dbConnection = dbConnection();
-        var _callback = function (error, result) {
-          return {
-            _dbConnection,
-            res,
-            id_users,
-          };
-
-        }
-          var retornoAdmGrupoSQL = new AdmGrupoSQL(_dbConnection, _callback);
-          retornoAdmGrupoSQL.getAdmGrupo()
-      }
-  )
-  app.get
-  (
-    '/getResposta',
-    function ({ query: {grupo_id,id_grupoPergunta,atividade_id,qtdAcerto} }, res) {
-      console.log(grupo_id,id_grupoPergunta,atividade_id,qtdAcerto);
-      var _dbConnection = dbConnection();
-      var _callback = function (error, result) {
-        return {
-          _dbConnection,
-          res,
-          grupo_id,
-          id_grupoPergunta,
-          atividade_id,
-          qtdAcerto,
-
-        };
-      }
-      var retornorankingSQL = new rankingSQL(_dbConnection, _callback);
-        retornorankingSQL.getResposta()
-    }
-  )
-  app.get
-(
-    '/getResp',
-    function ({ query: {Codigoatividade} }, res) {
-      console.log(Codigoatividade);
-      var _dbConnection = dbConnection();
-      var _callback = function (error, result) {
-        return {
-          _dbConnection,
-          res,
-          Codigoatividade,
-       };
-      }
-
-        var retornoRespostaTelaSQL = new RespostaTelaSQL(_dbConnection, _callback);
-        retornoRespostaTelaSQL.getResp()
-    }
-)
-app.get
-  (
-      '/getAdmRanking',
-      function ({ query: { id_users } }, res) {
-        console.log(id_users);
-        var _dbConnection = dbConnection();
-        var _callback = function (error, result) {
-          return {
-            _dbConnection,
-            res,
-            id_users,
-          };
-
-        }
-          var retornorAdmRanking = new AdmRanking(_dbConnection, _callback);
-          retornorAdmRanking.getAdmRanking()
-      }
-  )
 
 /* CONEXÃO BANCO DE DADOS */
 var dbConnection = function () {
@@ -440,6 +346,7 @@ AtividadeSQL.prototype.inputAtividade = function () {
       }
     );
 }
+
 function AtividadebuscaSQL(dbConnection, callback) {
   this._dbConnection = dbConnection;
   this._callback = callback;
@@ -471,6 +378,8 @@ function insertGruposSQL(dbConnection, callback) {
   this._dbConnection = dbConnection;
   this._callback = callback;
 }
+
+
 insertGruposSQL.prototype.inputgrupos = function () {
   const callbackRes = this._callback();
   callbackRes._dbConnection.query
@@ -495,25 +404,10 @@ function PerguntasSQL(dbConnection, callback) {
   this._callback = callback;
 }
 PerguntasSQL.prototype.getPergunta = function () {
-  const callbackRes = this._callback();
-  callbackRes._dbConnection.query
+  this._dbConnection.query
   (
-    'SELECT * FROM `perguntas` INNER JOIN grupoPerguntas ON perguntas.grupoPerguntas_id = grupoPerguntas.id_grupoPergunta WHERE grupoPerguntas_id=?',[callbackRes.id_grupoPergunta],
-    function (err, result, fields) {
-      if (err) throw err;
-      if (result.length) {
-        callbackRes.res.status(200).send({
-          success: 'Pergunta com sucesso',
-          statusCode: 200,
-          data: result
-        })
-      } else {
-        callbackRes.res.status(404).send({
-          success: 'Usuário ou senha inválidos',
-          statusCode: 404,
-        })
-      }
-    }
+    'SELECT * FROM `perguntas` INNER JOIN grupoPerguntas ON perguntas.grupoPerguntas_id = grupoPerguntas.id_grupoPergunta WHERE grupoPerguntas_id=1',
+      this._callback
   );
 }
 
@@ -556,6 +450,7 @@ buscaQuizzSQL.prototype.getBasicoTeste = function () {
     )
 
 }
+
 
 function buscaGrupoSQL(dbConnection, callback) {
   this._dbConnection = dbConnection;
@@ -609,7 +504,7 @@ insertintegrantesSQL.prototype.inputintegrantes = function () {
     (
       "INSERT INTO `integrante`(`nome`, `email`,`Ra`,`idGrupo`,`nome1`,`Ra1`,`nome2`,`Ra2`, `nome3`,`Ra3`) VALUES ('"+callbackRes.nomeRep+"','"+callbackRes.email+"','"+callbackRes.Ra+"','"+callbackRes.idGrupo+"','"+callbackRes.nome1+"','"+callbackRes.Ra1+"','"+callbackRes.nome2+"','"+callbackRes.Ra2+"','"+callbackRes.nome3+"','"+callbackRes.Ra3+"')",
     );
-    callbackRes.res.status(200).send({
+  callbackRes.res.status(200).send({
     success: 'Grupo inserido com sucesso',
     statusCode: 200,
   });
@@ -619,7 +514,10 @@ function insertPerguntaSQL(dbConnection, callback) {
   this._dbConnection = dbConnection;
   this._callback = callback;
 }
+
+
 insertPerguntaSQL.prototype.inputPerguntas1 = function () {
+  console.log('chegou aqui!');
   const callbackRes = this._callback();
     callbackRes._dbConnection.query
     (
@@ -627,6 +525,7 @@ insertPerguntaSQL.prototype.inputPerguntas1 = function () {
         if (err) {
           console.log('Erro: ' + err);
         }else{
+          console.log(result.insertId);
           callbackRes.res.status(200).send({
             success: 'Usuário inserido com sucesso',
             statusCode: 200,
@@ -636,118 +535,4 @@ insertPerguntaSQL.prototype.inputPerguntas1 = function () {
       }
     );
 }
-
-function EstacaoSQL(dbConnection, callback) {
-  this._dbConnection = dbConnection;
-  this._callback = callback;
-}
-EstacaoSQL.prototype.getEstacao = function () {
-  const callbackRes = this._callback();
-  callbackRes._dbConnection.query
-  (
-    'SELECT * FROM `grupoPerguntas` INNER JOIN atividade ON grupoPerguntas.atividade_id = atividade.id_atividade INNER JOIN usuario ON atividade.usuario_id = usuario.id_users WHERE id_users = ?',[callbackRes.id_users],
-    function (err, result, fields) {
-      if (err) throw err;
-      if (result.length) {
-        callbackRes.res.status(200).send({
-          success: 'COnsultar Estação',
-          statusCode: 200,
-          data2: result
-        })
-      }
-    }
-  );
-}
-  function AdmGrupoSQL(dbConnection, callback) {
-    this._dbConnection = dbConnection;
-    this._callback = callback;
-  }
-  AdmGrupoSQL.prototype.getAdmGrupo = function () {
-    const callbackRes = this._callback();
-    callbackRes._dbConnection.query
-    (
-      'SELECT * FROM `grupoPessoas` INNER JOIN atividade ON  grupoPessoas.id_atividade = atividade.id_atividade INNER JOIN usuario ON atividade.usuario_id = usuario.id_users WHERE id_users = ?',[callbackRes.id_users],
-      function (err, result, fields) {
-        if (err) throw err;
-        if (result.length) {
-          callbackRes.res.status(200).send({
-            success: 'Perguntas ',
-            statusCode: 200,
-            data3: result
-          })
-        }
-      }
-  );
-  }
-
-  function rankingSQL(dbConnection, callback) {
-    this._dbConnection = dbConnection;
-    this._callback = callback;
-  }
-  function rankingSQL(dbConnection, callback) {
-    this._dbConnection = dbConnection;
-    this._callback = callback;
-  }
-  rankingSQL.prototype.getResposta = function () {
-    const callbackRes = this._callback();
-    callbackRes._dbConnection.query
-      (
-        "INSERT INTO `resposta`(`grupo_id`, `pergunta_id`,`atividade_id`,`qtdAcerto`) VALUES ('"+callbackRes.grupo_id+"','"+callbackRes.id_grupoPergunta+"','"+callbackRes.atividade_id+"','"+callbackRes.qtdAcerto+"')",
-        function (err, result, fields) {
-        if (err) {
-          console.log('Erro: ' + err);
-        }else{
-            callbackRes.res.status(300).send({
-            success: 'Ranking',
-            statusCode: 300,
-            data4 : result
-          });
-        }
-      }
-      );
-    }
-
-  function RespostaTelaSQL(dbConnection, callback) {
-    this._dbConnection = dbConnection;
-    this._callback = callback;
-  }
-  RespostaTelaSQL.prototype.getResp = function () {
-    const callbackRes = this._callback();
-    callbackRes._dbConnection.query
-    (
-      'SELECT * FROM `resposta` INNER JOIN grupoPessoas ON resposta.grupo_id = grupoPessoas.idGrupo INNER JOIN atividade ON resposta.atividade_id = atividade.id_atividade WHERE atividade_id=? ORDER BY qtdAcerto DESC',[callbackRes.Codigoatividade],function (err, result, fields) {
-        if (err) throw err;
-        if (err) {
-          console.log('Erro: ' + err);
-        }else{
-            callbackRes.res.status(200).send({
-            success: 'Ranking',
-            statusCode: 200,
-            data5 : result
-          });
-        }
-      }
-    );
-  }
-  function AdmRanking(dbConnection, callback) {
-    this._dbConnection = dbConnection;
-    this._callback = callback;
-  }
-  AdmRanking.prototype.getAdmRanking = function () {
-    const callbackRes = this._callback();
-    callbackRes._dbConnection.query
-    (
-      'SELECT * FROM `resposta` INNER JOIN grupoPessoas ON resposta.grupo_id = grupoPessoas.idGrupo INNER JOIN atividade ON resposta.atividade_id = atividade.id_atividade INNER JOIN usuario ON atividade.usuario_id = usuario.id_users WHERE id_users = ?',[callbackRes.id_users],
-      function (err, result, fields) {
-        if (err) throw err;
-        if (result.length) {
-          callbackRes.res.status(200).send({
-            success: 'Consultar Grupos',
-            statusCode: 200,
-            data2: result
-          })
-        }
-      }
-    );
-  }
 
